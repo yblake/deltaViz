@@ -1,0 +1,9 @@
+{
+	"name": "deltaViz",
+	"description": "deltaViz dashboard",
+	"icon": "treemap",
+	"type": "visualization",
+	"version": 1,
+	"preview": "preview.png",
+	"author": "(c) Yves Blake 2014"
+}
