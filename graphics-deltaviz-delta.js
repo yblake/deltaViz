@@ -885,7 +885,6 @@ var dashboardViz = function ( self, dataD3, measures, width, height, id, legend,
 	// =====================================================================================================================
 	// Symbol
 	// =====================================================================================================================
-	console.log ("css",document.styleSheets);
 	kpi.filter( function(d) { return !( (d.item === null) || (d.previous == 0 && d.current == 0) )}).append("path")
 		.attr("stroke", "none")
 		.attr("fill", !properties.executive ? "white" : deltaColor)
