@@ -380,7 +380,7 @@
 			se = Math.max(sep,sen);
 
 			// Computes symbol size %
-			if ( properties.autosize && dataD3.length > 1) {
+			if ( properties.autosize && se > 0 && dataD3.length > 1) {
 				for (var cell = 0; cell < dataD3.length; ++cell) {
 					dataD3[cell].size = Math.round((100 * dataD3[cell].delta.sign() * dataD3[cell].delta)/se);
 				}
