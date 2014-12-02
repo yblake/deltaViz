@@ -87,7 +87,7 @@
 
 		// new object properties
 		initialProperties: {
-			version: 1.0,
+			version: 1.01,
 			qHyperCubeDef: {
 				qDimensions: [],
 				qMeasures: [],
@@ -294,9 +294,6 @@
 		// Object rendering
 		paint: function ( $element, layout ) {
 
-			//var parentscope = angular.element($element).scope().$parent.$parent;
-			//console.log(parentscope.editmode ? 'In Edit Mode' : 'Not in Edit mode');
-
 			// Get object properties and force unset values (new releases)
 			var properties = {
 				"focus" : (layout.qHyperCube.qFocus === undefined ? "percent" : layout.qHyperCube.qFocus),
@@ -325,7 +322,6 @@
 					"max":d.qMax
 					}
 			});
-			// console.log(measures);
 
 			// Legend text
 			var legend = "";
@@ -356,7 +352,6 @@
 					}
 				})
 			;
-			// console.log(dataD3);
 			
 			// Suppress null values
 			for (var cell = dataD3.length-1; cell >= 0; --cell) {
@@ -380,7 +375,7 @@
 			se = Math.max(sep,sen);
 
 			// Computes symbol size %
-			if ( properties.autosize && se > 0 && dataD3.length > 1) {
+			if ( properties.autosize && dataD3.length > 1 && se > 0) {
 				for (var cell = 0; cell < dataD3.length; ++cell) {
 					dataD3[cell].size = Math.round((100 * dataD3[cell].delta.sign() * dataD3[cell].delta)/se);
 				}
@@ -419,7 +414,7 @@
 
 			// D3 rendering
 			var self = this;
-			dashboardViz (
+			deltaViz (
 				self,
 				dataD3, 
 				measures, 
@@ -436,7 +431,7 @@
 
 } ); // Extension definition
 
-var dashboardViz = function ( self, dataD3, measures, width, height, id, legend, properties ) { 
+var deltaViz = function ( self, dataD3, measures, width, height, id, legend, properties ) { 
 
 	// Responsive area
 	var rows, columns;
@@ -469,8 +464,8 @@ var dashboardViz = function ( self, dataD3, measures, width, height, id, legend,
 	// Tile area
 	var kx = 0;
 	var ky = 0;
-	var kw = Math.floor(width/columns);
-	var kh = Math.floor(height/rows);
+	var kw = Math.floor((width-1)/columns);
+	var kh = Math.floor((height-1)/rows);
 	var cx = Math.floor(kw/2);
 	var cy = Math.floor(kh/2);
 
@@ -521,7 +516,9 @@ var dashboardViz = function ( self, dataD3, measures, width, height, id, legend,
 		.style("shape-rendering","geometricPrecision")
 	;
 
+	// =====================================================================================================================
 	// Symbols mask definitions
+	// =====================================================================================================================
 	var defs = svg.append("defs")
 
 	// Delta symbol (default)
@@ -592,13 +589,13 @@ var dashboardViz = function ( self, dataD3, measures, width, height, id, legend,
 	;
 
 	// =====================================================================================================================
-	// KPI tile area
+	// Tiles area
 	// =====================================================================================================================
-	var kpi = svg.selectAll("g")
+	var tile = svg.selectAll("g")
 		.data(dataD3)
 		.enter()
 		.append("g")
-		.attr("transform", function(d,i) { return "translate(" + (kw*(i%columns)) + "," + (kh*Math.floor(i/columns)) + ")"; })
+		.attr("transform", function(d,i) { return "translate(" + (Math.floor(kw*(i%columns))+0.5) + "," + (Math.floor(kh*Math.floor(i/columns))+0.5) + ")"; })
 		// Selectable area
 		.attr("data-dimensionid", function(d) { return d.dimensionid; })
 		.attr("cursor",cursor)
@@ -612,7 +609,7 @@ var dashboardViz = function ( self, dataD3, measures, width, height, id, legend,
 		return "pointer";
 	};
 
-	// When user select a kpi
+	// When user select a tile
 	function clickArea(d,i) {
 
 		// No dimension here...
@@ -660,7 +657,7 @@ var dashboardViz = function ( self, dataD3, measures, width, height, id, legend,
 	// =====================================================================================================================
 	// Tooltip
 	// =====================================================================================================================
-	kpi.append("title")
+	tile.append("title")
 		.text( function (d) {
 			var t;
 			if (d.item === null) return "";
@@ -669,7 +666,6 @@ var dashboardViz = function ( self, dataD3, measures, width, height, id, legend,
 			if (d.previous !== null) t+= "\n" + measures[1].title + " = " + d.previous.toMoney(properties.currency);
 			if (d.delta !== null) t+= "\n" + "Delta = " + ( d.delta > 0 ? "+" : "") + d.delta.toMoney(properties.currency);
 			if (d.variation !== null) t+= "\n" + "Variation = " + ( d.variation > 0 ? "+" : "") + d.variation.toPercent(2); 
-			//if (d.size !== null) t+= "\n" + "size = " + d.size;
 			return t;
 		})
 	;
@@ -677,105 +673,18 @@ var dashboardViz = function ( self, dataD3, measures, width, height, id, legend,
 	// =====================================================================================================================
 	// Background
 	// =====================================================================================================================
-	if ( !properties.executive ) {
-
-		// Candy design : Rectangle
-		kpi.append("rect")
-			.attr("x", bx) 
-			.attr("y", by) 
-			.attr("rx", properties.rounding)
-			.attr("ry", properties.rounding)
-			.attr("width", bw) 
-			.attr("height", bh) 
-			.attr("fill", deltaColor)
-			.attr("fill-opacity", 1)
-			;
-
-	} else {
-
-		// Executive design
-		if (properties.spacing == 0 && properties.rounding == 0) {
-
-			// No spacing : Rectangle and grid path
-			kpi.append("rect")
-				.attr("x", bx) 
-				.attr("y", by) 
-				.attr("rx", properties.rounding)
-				.attr("ry", properties.rounding)
-				.attr("width", bw) 
-				.attr("height", bh) 
-				.attr("fill", "white")
-				.attr("fill-opacity", 1)
-			;
-
-			kpi.append("path")
-				.attr("stroke", "#cccccc")
-				.attr("stroke-width", "1px")
-				.attr("fill", "none")
-				.attr("stroke-linecap","butt")
-				.attr("stroke-linejoin","miter")
-				.attr("d", gridPath) 
-			;
-
-		} else { 
-
-			// When spacing > 0, we can use stroke in executive mode
-			kpi.append("rect")
-				.attr("x", bx) 
-				.attr("y", by) 
-				.attr("rx", properties.rounding)
-				.attr("ry", properties.rounding)
-				.attr("width", bw) 
-				.attr("height", bh) 
-				.attr("fill", "white")
-				.attr("fill-opacity", 0)
-				.attr("stroke-width", "1px")
-				.attr("stroke", "#cccccc")
-				.attr("stroke-opacity", 1)
-				.attr("stroke-linecap","butt")
-				.attr("stroke-linejoin","miter")
-			;
-		}
-	}
-
-	// Full screen grid for executive mode (works nice in IE & Chrome)
-	function gridPath(d,i) {
-		var path; 
-		if (i == 0) {
-
-			// Upper left cell
-			path  = "M" + (bx+1) + " " + (by+1);
-			path += "h" + (bw-2);
-			path += "v" + (bh-2);
-			path += "h" + (-bw+2);
-			path += "z";
-
-		} else if (i < columns) {
-
-			// Upper row
-			path  = "M" + (bx) + " " + (by+1);
-			path += "h" + (bw-1);
-			path += "v" + (bh-2);
-			path += "h" + (-bw+1);
-
-		} else if (i%columns == 0) {
-
-			// Leftmost column
-			path  = "M" + (bx+1) + " " + (by);
-			path += "v" + (bh-1);
-			path += "h" + (bw-2);
-			path += "v" + (-bh+1);
-
-		} else {
-
-			// Other cells
-			path  = "M" + (bx) + " " + (by+bh-1);
-			path += "h" + (bw-1);
-			path += "v" + (-bh+1);
-
-		}
-		return path
-	}
+	tile.append("rect")
+		.attr("x", bx) 
+		.attr("y", by) 
+		.attr("rx", properties.rounding)
+		.attr("ry", properties.rounding)
+		.attr("width", bw) 
+		.attr("height", bh) 
+		.attr("fill", properties.executive ? "white" : deltaColor)
+		.attr("fill-opacity", properties.executive ? 0 : 1)
+		.attr("stroke-width", properties.executive ? "1px" : "0")
+		.attr("stroke", "#cccccc")
+	;
 
 	// Highlight color (Background for Candy; Symbol, % and delta for Executive)
 	function deltaColor(d) {
@@ -788,7 +697,7 @@ var dashboardViz = function ( self, dataD3, measures, width, height, id, legend,
 			discrete = "#87794e";
 			total="#647687"; 
 		} else {
-			// Normal (default)
+			// Normal contrast (default)
 			green = "#a4c400";
 			red = "#d80073";
 			blue = "#1ba1e2";
@@ -812,7 +721,7 @@ var dashboardViz = function ( self, dataD3, measures, width, height, id, legend,
 	// Background image for missing data
 	// =====================================================================================================================
 	var iw = Math.floor(Math.min(bw,bh)*0.75);
-	kpi.filter(function(d) { return d.item === null }).append("svg:image")  
+	tile.filter(function(d) { return d.item === null }).append("svg:image")  
 		.attr('x',cx-iw/2)
 		.attr('y',cy-iw/2)
 		.attr('width', iw)
@@ -823,7 +732,7 @@ var dashboardViz = function ( self, dataD3, measures, width, height, id, legend,
 	// =====================================================================================================================
 	// Top right caption
 	// =====================================================================================================================
-	kpi.append("text")
+	tile.append("text")
 		.attr("x", dx+dw-1) 
 		.attr("y", dy+fsCaption-1) 
 		.attr("text-anchor", "end")
@@ -848,7 +757,7 @@ var dashboardViz = function ( self, dataD3, measures, width, height, id, legend,
 	// =====================================================================================================================
 	// Main centered text
 	// =====================================================================================================================
-	kpi.append("text")
+	tile.append("text")
 		.attr("x", dx+dw-1) 
 		.attr("y", cy-5+fsCenter/2)
 		.attr("text-anchor", "end")
@@ -885,7 +794,7 @@ var dashboardViz = function ( self, dataD3, measures, width, height, id, legend,
 	// =====================================================================================================================
 	// Symbol
 	// =====================================================================================================================
-	kpi.filter( function(d) { return !( (d.item === null) || (d.previous == 0 && d.current == 0) )}).append("path")
+	tile.filter( function(d) { return !( (d.item === null) || (d.previous == 0 && d.current == 0) )}).append("path")
 		.attr("stroke", "none")
 		.attr("fill", !properties.executive ? "white" : deltaColor)
 		.attr("d","M0 0v" + psArrow + "h" + psArrow + "v-" + psArrow + "z")
@@ -913,7 +822,7 @@ var dashboardViz = function ( self, dataD3, measures, width, height, id, legend,
 		// =====================================================================================================================
 		// Bottom left caption
 		// =====================================================================================================================
-		kpi.append("text")
+		tile.append("text")
 			.attr("y", dy+dh-1) 
 			.attr("x", dx) 
 			.attr("text-anchor", "start")
@@ -946,7 +855,7 @@ var dashboardViz = function ( self, dataD3, measures, width, height, id, legend,
 		// =====================================================================================================================
 		// Bottom right caption
 		// =====================================================================================================================
-		kpi.append("text")
+		tile.append("text")
 			.attr("y", dy+dh-1) 
 			.attr("x", dx+dw-1) 
 			.attr("text-anchor", "end")
@@ -970,4 +879,4 @@ var dashboardViz = function ( self, dataD3, measures, width, height, id, legend,
 
 	}; // Display bottom captions
 
-}; // dashboardViz
+}; // deltaViz
