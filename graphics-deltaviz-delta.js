@@ -87,7 +87,7 @@
 
 		// new object properties
 		initialProperties: {
-			version: 1.01,
+			version: 1.02,
 			qHyperCubeDef: {
 				qDimensions: [],
 				qMeasures: [],
@@ -334,12 +334,11 @@
 			}
 
 			// Create a new array for our extension with a row for each row in the qMatrix
-			var othersLabel = this.backendApi.getDimensionInfos()[dimension].othersLabel;
 			var page = 0;
 			var dataD3 = layout.qHyperCube.qDataPages[page].qMatrix.map( function(d) {
 				// for each element in the matrix, create a new object that has a property for first dimension and two measures
 				return {
-					"item": d[dimension].qIsOtherCell ? othersLabel : d[dimension].qText,
+					"item": d[dimension].qIsOtherCell ? layout.qHyperCube.qDimensionInfo[dimension].othersLabel : d[dimension].qText,
 					"current":d[measure_current].qNum,
 					"previous":d[measure_previous].qNum,
 					// Computations
@@ -523,7 +522,7 @@ var deltaViz = function ( self, dataD3, measures, width, height, id, legend, pro
 
 	// Delta symbol (default)
 	defs.append("mask")
-	.attr("id", "deltaMask")
+	.attr("id", id + "_deltaMask")
 	.attr("maskContentUnits", "objectBoundingBox")
 	.append("polygon")
 	.attr("fill", "white")
@@ -532,7 +531,7 @@ var deltaViz = function ( self, dataD3, measures, width, height, id, legend, pro
 
 	// Classic arrow 
 	defs.append("mask")
-	.attr("id", "classicMask")
+	.attr("id", id + "_classicMask")
 	.attr("maskContentUnits", "objectBoundingBox")
 	.append("polygon")
 	.attr("fill", "white")
@@ -541,7 +540,7 @@ var deltaViz = function ( self, dataD3, measures, width, height, id, legend, pro
 
 	// Light arrow 
 	defs.append("mask")
-	.attr("id", "lightMask")
+	.attr("id", id + "_lightMask")
 	.attr("maskContentUnits", "objectBoundingBox")
 	.append("polygon")
 	.attr("fill", "white")
@@ -550,7 +549,7 @@ var deltaViz = function ( self, dataD3, measures, width, height, id, legend, pro
 
 	// Hand drawing arrow 
 	defs.append("mask")
-	.attr("id", "drawMask")
+	.attr("id", id + "_drawMask")
 	.attr("maskContentUnits", "objectBoundingBox")
 	.append("path")
 	.attr("fill", "white")
@@ -591,6 +590,7 @@ var deltaViz = function ( self, dataD3, measures, width, height, id, legend, pro
 	// =====================================================================================================================
 	// Tiles area
 	// =====================================================================================================================
+	var selectionCount = 0;
 	var tile = svg.selectAll("g")
 		.data(dataD3)
 		.enter()
@@ -599,7 +599,7 @@ var deltaViz = function ( self, dataD3, measures, width, height, id, legend, pro
 		// Selectable area
 		.attr("data-dimensionid", function(d) { return d.dimensionid; })
 		.attr("cursor",cursor)
-		.on("click", clickArea)
+		.on("click", clickTile)
 	;
 
 	// Show hand cursor on selectable area
@@ -610,7 +610,7 @@ var deltaViz = function ( self, dataD3, measures, width, height, id, legend, pro
 	};
 
 	// When user select a tile
-	function clickArea(d,i) {
+	function clickTile(d,i) {
 
 		// No dimension here...
 		if ( self.selectionsEnabled == false || d.dimensionid === null || d.item === undefined)
@@ -618,35 +618,25 @@ var deltaViz = function ( self, dataD3, measures, width, height, id, legend, pro
 
 		// Toggle selection
 		d.selected = 1-d.selected;
+		selectionCount += (d.selected === 1 ? 1 : -1);
 
 		// Visual feedback
 		if ( properties.executive ) {
-
-			// Highlight in QS green
-			d3.selectAll("rect").filter(function(d) { return d.selected })
-				.attr("fill-opacity", 0.3)
-				.attr("fill", "#52cc52")
-			;
-
-			// Dimmed light gray
-			d3.selectAll("rect").filter(function(d) { return !d.selected && d.dimensionid !== null})
-				.attr("fill-opacity", 0.2)
-				.attr("fill", "#cccccc")
-			;
-
+			// Highlight selections in QS green
+			svg.selectAll("rect")
+			.attr("fill-opacity", function(d) { 
+				return selectionCount > 0 ? (  d.selected ? 0.3 : 0.2 ) : 0. ; 
+			})
+			.attr("fill", function(d) { 
+				return selectionCount > 0 ? (  d.selected ? "#52cc52" : "#cccccc" ) : "white" ; 
+			})
 		} else {
-
-			// Selections remains fullfilled
-			d3.selectAll("rect").filter(function(d) { return d.selected })
-				.attr("fill-opacity", 1.)
-			;
-
-			// Unselected elements have half transparency
-			d3.selectAll("rect").filter(function(d) { return !d.selected && d.dimensionid !== null})
-				.attr("fill-opacity", 0.5)
-			;
-
-		};
+			// Highlight selections by opacity
+			svg.selectAll("rect")
+			.attr("fill-opacity", function(d) { 
+				return selectionCount > 0 ? (  d.selected ? 1. : 0.5 ) : 1. ; 
+			})
+		}
 
 		// Toggle QS selection for first dimension
 		var dim = 0, value = d.dimensionid;
@@ -798,7 +788,7 @@ var deltaViz = function ( self, dataD3, measures, width, height, id, legend, pro
 		.attr("stroke", "none")
 		.attr("fill", !properties.executive ? "white" : deltaColor)
 		.attr("d","M0 0v" + psArrow + "h" + psArrow + "v-" + psArrow + "z")
-		.attr("mask", "url(" + url + "#" + properties.symbol + "Mask" + ")")
+		.attr("mask", "url(" + url + "#" + id + "_" + properties.symbol + "Mask" + ")")
 		.attr("transform", function (d) {
 			// Step 4 : Translate symbol center to final position
 			var transform = "translate("+Math.floor(dx + 3*padding + psArrow/2)+","+Math.floor(cy)+")";
