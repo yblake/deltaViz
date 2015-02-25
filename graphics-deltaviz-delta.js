@@ -49,7 +49,7 @@
 
 	String.prototype.translate = function() {
 		var translations = {};
-		var locale = navigator.languages ? navigator.languages[0] : (navigator.language || navigator.userLanguage || navigator.browserLanguage || navigator.systemLanguage || 'en');
+		var locale = (navigator.languages && navigator.languages.length > 0) ? navigator.languages[0] : (navigator.language || navigator.userLanguage || navigator.browserLanguage || navigator.systemLanguage || 'en');
 		if ( locale.indexOf('fr') >= 0 ) {
 			// Do nothing, this is already done
 		} else {
@@ -87,7 +87,7 @@
 
 		// new object properties
 		initialProperties: {
-			version: 1.02,
+			version: 1.1,
 			qHyperCubeDef: {
 				qDimensions: [],
 				qMeasures: [],
@@ -136,7 +136,7 @@
 						focus : {
 							type: "string",
 							label: "Focus".translate(),
-							component: "radiobuttons",
+							component: "buttongroup",
 							ref: "qHyperCubeDef.qFocus",   
 							options: [ {
 								value: "current",
