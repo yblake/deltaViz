@@ -3,7 +3,7 @@
 	"description": "deltaViz dashboard",
 	"icon": "treemap",
 	"type": "visualization",
-	"version": 1.1,
+	"version": 1.2,
 	"preview": "preview.png",
 	"author": "(c) Yves Blake 2014-2015"
 }

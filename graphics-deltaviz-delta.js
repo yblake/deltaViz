@@ -1,4 +1,35 @@
-﻿define(["jquery", "text!./graphics-deltaviz-delta.css", "./d3.min"], function($, cssContent) {
+/**
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * - Redistributions of source code must retain the above copyright notice, this
+ *   list of conditions and the following disclaimer.
+ *
+ * - Redistributions in binary form must reproduce the above copyright notice,
+ *   this list of conditions and the following disclaimer in the documentation
+ *   and/or other materials provided with the distribution.
+ *
+ * The name Yves Blake may not be used to endorse or promote products
+ * derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL MICHAEL BOSTOCK BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+ * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * @license    deltaViz : Copyright (c) 2014-2015, Yves Blake All rights reserved.
+ * @library    d3 : Copyright (c) 2010-2015, Michael Bostock All rights reserved.
+ * @release    1.2
+ * @details    https://github.com/yblake/deltaViz
+ */
+ 
+ define(["jquery", "text!./graphics-deltaviz-delta.css", "./d3.min"], function($, cssContent) {
 
 	'use strict';
 	$("<style>").html(cssContent).appendTo("head");
@@ -48,46 +79,89 @@
 	}
 
 	String.prototype.translate = function() {
+
+		var locale = (window.navigator.languages && window.navigator.languages.length > 0 ) ? window.navigator.languages[0] : null;
+		locale = locale || window.navigator.language || window.navigator.userLanguage || window.navigator.browserLanguage || 'en';
+		if (locale.indexOf('-') !== -1)
+			locale = locale.split('-')[0];
+		if (locale.indexOf('_') !== -1)
+			locale = locale.split('_')[0];
+
 		var translations = {};
-		var locale = (navigator.languages && navigator.languages.length > 0) ? navigator.languages[0] : (navigator.language || navigator.userLanguage || navigator.browserLanguage || navigator.systemLanguage || 'en');
-		if ( locale.indexOf('fr') >= 0 ) {
-			// Do nothing, this is already done
-		} else {
-			// Default to english
-			translations = {
-				"Options": "Options",
-				"Focus": "Focus",
-				"Afficher le total": "Show total",
-				"Symbole": "Symbol",
-				"Icône":"Icon",
-				"Delta":"Delta",
-				"Classique":"Classic",
-				"Léger":"Light",
-				"Dessin":"Drawing",
-				"Angle":"Angle",
-				"Taille relative": "Relative size",
-				"Neutralité":"Neutral",
-				"Devise":"Currency",
-				"€": "$",
-				"Style":"Style",
-				"Design":"Design",
-				"Candy":"Candy",
-				"Executive":"Executive",
-				"Espacement":"Spacing",
-				"Arrondi":"Rounding",
-				"Contraste":"Contrast",
-				"Normal":"Normal",
-				"Elevé":"High"
-			};
-		};
+		// ISO 639-1 language code
+		switch( locale.toLowerCase().trim() ) {
+			case 'fr':
+				// Do nothing, this is already done
+				break;
+			case 'de':
+				// German translation (with help of R. Vecera)
+				translations = {
+					"Options": "Optionen",
+					"Focus": "Fokus",
+					"Afficher le total": "Gesamtsumme anzeigen",
+					"Symbole": "Symbol",
+					"Icône":"Ikone",
+					"Delta":"Delta",
+					"Classique":"Klassisch",
+					"Léger":"Zierlich",
+					"Dessin":"Gezeichnet",
+					"Angle":"Winkel",
+					"Taille relative": "Relative Größe",
+					"Neutralité":"Neutral",
+					"Devise":"Währung",
+					"€": "€",
+					"Style":"Stil",
+					"Design":"Design",
+					"Candy":"Candy",
+					"Executive":"Executive",
+					"Espacement":"Abstand",
+					"Arrondi":"Abgerundete Ecken",
+					"Contraste":"Kontrast",
+					"Normal":"Normal",
+					"Elevé":"Hoch",
+					"Dégradé" : "Abstufung",
+					"Inverser les couleurs":"Farben invertieren"
+				};
+				break;
+			default:
+				// Default to english
+				translations = {
+					"Options": "Options",
+					"Focus": "Focus",
+					"Afficher le total": "Show total",
+					"Symbole": "Symbol",
+					"Icône":"Icon",
+					"Delta":"Delta",
+					"Classique":"Classic",
+					"Léger":"Light",
+					"Dessin":"Drawing",
+					"Angle":"Angle",
+					"Taille relative": "Relative size",
+					"Neutralité":"Neutral",
+					"Devise":"Currency",
+					"€": "$",
+					"Style":"Style",
+					"Design":"Design",
+					"Candy":"Candy",
+					"Executive":"Executive",
+					"Espacement":"Spacing",
+					"Arrondi":"Rounding",
+					"Contraste":"Contrast",
+					"Normal":"Normal",
+					"Elevé":"High",
+					"Dégradé" : "Gradient",
+					"Inverser les couleurs":"Invert colors"
+				};
+		}
+
 		return translations[this] ? translations[this] : this;
 	}
-	
+
 	return {
 
 		// new object properties
 		initialProperties: {
-			version: 1.1,
+			version: 1.2,
 			qHyperCubeDef: {
 				qDimensions: [],
 				qMeasures: [],
@@ -107,7 +181,9 @@
 				qAutosize: true,
 				qSpacing:5,
 				qRounding:0,
-				qContrast:false
+				qContrast:false,
+				qInverted:false,
+				qGradient:false
 			}
 		},
 
@@ -137,7 +213,7 @@
 							type: "string",
 							label: "Focus".translate(),
 							component: "buttongroup",
-							ref: "qHyperCubeDef.qFocus",   
+							ref: "qHyperCubeDef.qFocus",
 							options: [ {
 								value: "current",
 								label: "N"
@@ -155,17 +231,6 @@
 							label: "Afficher le total".translate(),
 							ref: "qHyperCubeDef.qTotal",
 							defaultValue: true
-						},
-						neutrality: {
-							type: "number",
-							label: "Neutralité".translate() + " [0% - 15%]",
-							ref: "qHyperCubeDef.qNeutrality",
-							defaultValue: 7.5,
-							show:true,
-							component: "slider",
-							min: 0,
-							max: 15,
-							step: 2.5
 						},
 						currency: {
 							type: "string",
@@ -243,6 +308,43 @@
 									} ],
 									defaultValue: false
 								},
+								neutrality: {
+									type: "number",
+									label: "Neutralité".translate() + " [0% - 15%]",
+									ref: "qHyperCubeDef.qNeutrality",
+									defaultValue: 7.5,
+									show:true,
+									component: "slider",
+									min: 0,
+									max: 15,
+									step: 2.5
+								},
+								gradient: {
+									type: "boolean",
+									label: "Dégradé".translate(),
+									ref: "qHyperCubeDef.qGradient",
+									defaultValue: false
+								},
+								inverted: {
+									type: "boolean",
+									label: "Inverser les couleurs".translate(),
+									ref: "qHyperCubeDef.qInverted",
+									defaultValue: false
+								},
+								contrast: {
+									type: "boolean",
+									label: "Contraste".translate(),
+									ref: "qHyperCubeDef.qContrast",
+									component: "switch",
+									options: [ {
+										value: false,
+										label: "Normal".translate()
+										}, {
+										value: true,
+										label: "Elevé".translate()
+									} ],
+									defaultValue: false
+								}, 
 								spacing: {
 									type: "number",
 									label: "Espacement".translate(),
@@ -264,21 +366,7 @@
 									min: 0,
 									max: 15,
 									step: 5
-								},
-								contrast: {
-									type: "boolean",
-									label: "Contraste".translate(),
-									ref: "qHyperCubeDef.qContrast",
-									component: "switch",
-									options: [ {
-										value: false,
-										label: "Normal".translate()
-										}, {
-										value: true,
-										label: "Elevé".translate()
-									} ],
-									defaultValue: false
-								} 
+								}
 							} // Style group items
 						} // Style group
 					} // Settings items
@@ -297,16 +385,18 @@
 			// Get object properties and force unset values (new releases)
 			var properties = {
 				"focus" : (layout.qHyperCube.qFocus === undefined ? "percent" : layout.qHyperCube.qFocus),
-				"total"  : (layout.qHyperCube.qTotal === undefined ? true : layout.qHyperCube.qTotal),
-				"neutrality"  : (layout.qHyperCube.qNeutrality === undefined ? 7.5 : layout.qHyperCube.qNeutrality),
+				"total" : (layout.qHyperCube.qTotal === undefined ? true : layout.qHyperCube.qTotal),
+				"neutrality" : (layout.qHyperCube.qNeutrality === undefined ? 7.5 : layout.qHyperCube.qNeutrality),
 				"currency" : (layout.qHyperCube.qCurrency === undefined ? "€".translate() : layout.qHyperCube.qCurrency),
 				"symbol" : (layout.qHyperCube.qSymbol === undefined ? "delta" : layout.qHyperCube.qSymbol),
 				"angle" : (layout.qHyperCube.qAngle === undefined ? 90 : layout.qHyperCube.qAngle),
 				"autosize" : (layout.qHyperCube.qAutosize === undefined ? true : layout.qHyperCube.qAutosize),
 				"executive" : (layout.qHyperCube.qCandyStyle === undefined ? false : layout.qHyperCube.qCandyStyle),
-				"spacing"  : (layout.qHyperCube.qSpacing === undefined ? 5 : layout.qHyperCube.qSpacing),
-				"rounding"  : (layout.qHyperCube.qRounding === undefined ? 0 : layout.qHyperCube.qRounding),
-				"contrast"  : (layout.qHyperCube.qContrast === undefined ? false : layout.qHyperCube.qContrast)
+				"spacing" : (layout.qHyperCube.qSpacing === undefined ? 5 : layout.qHyperCube.qSpacing),
+				"rounding" : (layout.qHyperCube.qRounding === undefined ? 0 : layout.qHyperCube.qRounding),
+				"contrast" : (layout.qHyperCube.qContrast === undefined ? false : layout.qHyperCube.qContrast),
+				"inverted" : (layout.qHyperCube.qInverted === undefined ? false : layout.qHyperCube.qInverted),
+				"gradient" : (layout.qHyperCube.qGradient === undefined ? false : layout.qHyperCube.qGradient)
 			};
 
 			// Single dimension component
@@ -351,7 +441,7 @@
 					}
 				})
 			;
-			
+
 			// Suppress null values
 			for (var cell = dataD3.length-1; cell >= 0; --cell) {
 				if (dataD3[cell].current == 0 && dataD3[cell].previous == 0)
@@ -365,7 +455,7 @@
 				sp += dataD3[cell].previous;
 				if ( dataD3[cell].delta >= 0 && dataD3[cell].delta > sep ) {
 					sep = dataD3[cell].delta;
-				} else if (dataD3[cell].delta < 0 &&  -dataD3[cell].delta > sen) {
+				} else if (dataD3[cell].delta < 0 && -dataD3[cell].delta > sen) {
 					sen = (-dataD3[cell].delta);
 				}
 			}
@@ -421,7 +511,9 @@
 				height, 
 				id, 
 				legend,
-				properties
+				properties,
+				-sen,
+				sep
 			);
 
 		} // Paint
@@ -430,7 +522,7 @@
 
 } ); // Extension definition
 
-var deltaViz = function ( self, dataD3, measures, width, height, id, legend, properties ) { 
+var deltaViz = function ( self, dataD3, measures, width, height, id, legend, properties, minDelta, maxDelta ) { 
 
 	// Responsive area
 	var rows, columns;
@@ -501,6 +593,18 @@ var deltaViz = function ( self, dataD3, measures, width, height, id, legend, pro
 
 	// Needed for SVG masking (QS uses HTML5 base tag)
 	var url = $(location).attr('href');
+
+	// Red color gradient
+	var redScale = d3.scale.quantize()
+		.domain([minDelta,minDelta*(properties.neutrality /100.)])
+		.range(properties.contrast ? ["#a20025","#bd002c","#f00038"] : ["#a60058","#bf0066","#d80073"])
+	;
+
+	// Green color gradient
+	var greenScale = d3.scale.quantize()
+		.domain([maxDelta*(properties.neutrality /100.),maxDelta])
+		.range(properties.contrast ? ["#00bd00","#00a300","#008a00"] : ["#a4c400","#8eab00","#799100"])
+	;
 
 	// =====================================================================================================================
 	// SVG container
@@ -625,16 +729,16 @@ var deltaViz = function ( self, dataD3, measures, width, height, id, legend, pro
 			// Highlight selections in QS green
 			svg.selectAll("rect")
 			.attr("fill-opacity", function(d) { 
-				return selectionCount > 0 ? (  d.selected ? 0.3 : 0.2 ) : 0. ; 
+				return selectionCount > 0 ? ( d.selected ? 0.3 : 0.2 ) : 0. ; 
 			})
 			.attr("fill", function(d) { 
-				return selectionCount > 0 ? (  d.selected ? "#52cc52" : "#cccccc" ) : "white" ; 
+				return selectionCount > 0 ? ( d.selected ? "#52cc52" : "#cccccc" ) : "white" ; 
 			})
 		} else {
 			// Highlight selections by opacity
 			svg.selectAll("rect")
 			.attr("fill-opacity", function(d) { 
-				return selectionCount > 0 ? (  d.selected ? 1. : 0.5 ) : 1. ; 
+				return selectionCount > 0 ? ( d.selected ? 1. : 0.5 ) : 1. ; 
 			})
 		}
 
@@ -676,42 +780,36 @@ var deltaViz = function ( self, dataD3, measures, width, height, id, legend, pro
 		.attr("stroke", "#cccccc")
 	;
 
-	// Highlight color (Background for Candy; Symbol, % and delta for Executive)
+	// =====================================================================================================================
+	// Highlight color (Background for Candy style; Symbol, % and delta for Executive style)
+	// =====================================================================================================================
 	function deltaColor(d) {
-		var green, red, blue, discrete, total;
-		if ( properties.contrast ) {
-			// High contrast
-			green = "#008a00";
-			red = "#a20025";
-			blue = "#0050ef";
-			discrete = "#87794e";
-			total="#647687"; 
-		} else {
-			// Normal contrast (default)
-			green = "#a4c400";
-			red = "#d80073";
-			blue = "#1ba1e2";
-			discrete = "#bbbbbb";
-			total="#647687"; 
-		}
 
-		if ( d.item == "Σ" ) return total;
-		if ( (d.item === null) || (d.previous == 0) ) return discrete;
-		if (d.variation > (properties.neutrality /100.)) { 
-			return green;
-		} else if (d.variation < (-properties.neutrality /100.)) { 
-			return red;
+		// Total
+		if ( d.item == "Σ" ) return properties.contrast ? "#647687" : "#647687";
+		
+		// Discrete
+		if ( (d.item === null) || (d.previous == 0) ) return properties.contrast ? "#87794e" : "#bbbbbb";
+		
+		// Delta palette
+		var invert = properties.inverted ? -1 : 1;
+		if (d.variation * invert > (properties.neutrality /100.)) { 
+			// Green
+			return properties.gradient ? greenScale(d.delta * invert) : properties.contrast ? "#008a00" : "#a4c400"; 
+		} else if (d.variation * invert < (-properties.neutrality /100.)) { 
+			// Red
+			return properties.gradient ? redScale(d.delta * invert) : properties.contrast ? "#a20025" : "#d80073"; 
 		} else {
-			return blue;
+			// Blue
+			return properties.contrast ? "#0050ef" : "#1ba1e2";
 		};
-
 	};
 
 	// =====================================================================================================================
 	// Background image for missing data
 	// =====================================================================================================================
 	var iw = Math.floor(Math.min(bw,bh)*0.75);
-	tile.filter(function(d) { return d.item === null }).append("svg:image")  
+	tile.filter(function(d) { return d.item === null }).append("svg:image")
 		.attr('x',cx-iw/2)
 		.attr('y',cy-iw/2)
 		.attr('width', iw)
