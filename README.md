@@ -3,7 +3,7 @@ deltaViz
 
 deltaViz self service dashboard extension for Qlik Sense
 
-![Alt text](/relative/path/to/preview.png?raw=true "deltaViz dashboard for Qlik Sense")
+![Alt text](/preview.png?raw=true "deltaViz dashboard for Qlik Sense")
 
 Under terms of use and licence : [LICENCE](https://github.com/yblake/deltaViz/blob/master/LICENSE)
 
