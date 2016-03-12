@@ -1,9 +1,14 @@
 {
 	"name": "deltaViz",
-	"description": "deltaViz dashboard",
+	"description": "deltaViz variance dashboard",
 	"icon": "treemap",
 	"type": "visualization",
-	"version": 1.2,
+	"version": 1.3,
 	"preview": "preview.png",
-	"author": "(c) Yves Blake 2014-2015"
+	"author": "(c) Yves Blake 2014-2016",
+	"homepage" : "https://github.com/yblake/deltaViz",
+	"keywords" : "qlik-sense, visualization, deltaViz",
+	"license" : "https://github.com/yblake/deltaViz/blob/master/LICENSE",
+	"repository" : "",
+	"dependencies" : { "qlik-sense" : ">=2.2.x" }
 }
