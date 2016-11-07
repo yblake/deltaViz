@@ -29,7 +29,7 @@
  * @details    https://github.com/yblake/deltaViz
  */
  
- define(['jquery', 'text!./graphics-deltaviz-delta.css', './d3.min'], function($, cssContent) {
+ define(['qlik','jquery', 'text!./graphics-deltaviz-delta.css', './d3.min'], function(qlik, $, cssContent) {
 
 	'use strict';
 	$('<style>').html(cssContent).appendTo('head');
@@ -180,7 +180,7 @@
 
 		// new object properties
 		initialProperties: {
-			version: 1.3,
+			version: 1.4,
 			qHyperCubeDef: {
 				qDimensions: [],
 				qMeasures: [],
@@ -470,6 +470,16 @@
 			}
 		},
 
+		// v1.4 : Added QS 3.0 Export and print capability
+		support : {
+			export: function( layout ) {
+				return layout.qHyperCube.qDataPages[0].qMatrix.length;
+			},
+			exportData: function( layout ) {
+				return layout.qHyperCube.qDataPages[0].qMatrix.length;
+			}
+		},
+
 		// Snapshot availability
 		snapshot: {
 			canTakeSnapshot: true
@@ -627,6 +637,9 @@
 				maxPositiveVariance
 			);
 
+			// v1.4 : Added QS 3.0 "finished rendering" notification
+			return qlik.Promise.resolve();
+		
 		} // Paint
 
 	}; // Extension function
